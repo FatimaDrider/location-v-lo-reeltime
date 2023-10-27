@@ -1,0 +1,105 @@
+# version: "3"
+# services:
+#   zookeeper:
+#     image: confluentinc/cp-zookeeper:latest
+#     container_name: zookeepervelo
+#     ports:
+#       - "2181:2181"
+#     environment:
+#       ZOOKEEPER_CLIENT_PORT: 2181
+
+#   kafka1:
+#     image: confluentinc/cp-kafka:latest
+#     container_name: kafkavelo
+#     ports:
+#       - "9093:9093"
+#     environment:
+#       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9093
+#       KAFKA_BROKER_ID: 2
+#       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+#       KAFKA_DELETE_TOPIC_ENABLE: "true"
+#       KAFKA_ZOOKEEPER_CONNECT: zookeepervelo:2181
+
+#     depends_on:
+#       - zookeeper
+
+#   kafka2:
+#     image: confluentinc/cp-kafka:latest
+#     container_name: kafkavelo2
+#     ports:
+#       - "9095:9095"
+#     environment:
+#       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9095
+#       KAFKA_BROKER_ID: 3
+#       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+#       KAFKA_DELETE_TOPIC_ENABLE: "true"
+#       KAFKA_ZOOKEEPER_CONNECT: zookeepervelo:2181
+
+version: "2"
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    expose:
+      - "9093"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9093,OUTSIDE://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  kafka1:
+    image: wurstmeister/kafka
+    container_name: kafka1
+    ports:
+      - "9094:9094"
+    expose:
+      - "9095"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka1:9095,OUTSIDE://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9095,OUTSIDE://0.0.0.0:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  kafka2:
+    image: wurstmeister/kafka
+    container_name: kafka2
+    ports:
+      - "9096:9096"
+    expose:
+      - "9097"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka2:9097,OUTSIDE://localhost:9096
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9097,OUTSIDE://0.0.0.0:9096
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  storm:
+    image: wurstmeister/storm:2.0.0
+    ports:
+      - "3772:3772"
+      - "3773:3773"
+      - "49091:49091"
+      - "6627:6627"
+    expose:
+      - "8080"
+    environment:
+      - ZOOKEEPER_SERVERS=zookeeper
+      - NIMBUS_SEEDS=nimbus
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: storm supervisor
